@@ -1,8 +1,56 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model MicroMLVisualizer.Models.ViewModels.HomeViewModel
+
+@{
+    ViewData["Title"] = "MicroML AST Visualizer";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="app-container">
+    <div class="input-section">
+        <h2>MicroML Code</h2>
+        <form method="post" asp-action="Parse">
+            <div class="form-group">
+                <textarea id="codeInput" name="code" class="code-input">@Model.Code</textarea>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn-parse">Parse and Visualize</button>
+            </div>
+        </form>
+        
+        <div class="examples">
+            <h3>Examples</h3>
+            <div class="example-buttons">
+                <button class="btn-example" data-example="fun x -> x + 1">Simple Function</button>
+                <button class="btn-example" data-example="fun f -> fun x -> f (f x)">Higher-Order Function</button>
+                <button class="btn-example" data-example="if x < 10 then x * 2 else x / 2">If-Then-Else</button>
+                <button class="btn-example" data-example="let add = fun x -> fun y -> x + y in add 3 4">Let Binding</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="output-section">
+        <h2>Abstract Syntax Tree</h2>
+        @if (!Model.Success)
+        {
+            <div class="error-panel">
+                <h3>Error</h3>
+                <p>@Model.ErrorMessage</p>
+            </div>
+        }
+        <div id="ast-container" class="ast-container"></div>
+    </div>
 </div>
+
+<script>
+    // Initialize with the parse result if available
+    document.addEventListener('DOMContentLoaded', function() {
+        const parseResult = '@Html.Raw(Model.ParseResult.Replace("\\", "\\\\").Replace("'", "\\'"))';
+        if (parseResult) {
+            try {
+                const astData = JSON.parse(parseResult);
+                renderAST(astData);
+            } catch (e) {
+                console.error('Failed to parse AST data:', e);
+            }
+        }
+    });
+</script>
