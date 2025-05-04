@@ -11,6 +11,13 @@ namespace MicroMLVisualizer.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly ILogger<HomeController> _logger;
+
+        public HomeController(ILogger<HomeController> logger)
+        {
+            _logger = logger;
+        }
+
         public IActionResult Index()
         {
             return View(new HomeViewModel());
@@ -26,6 +33,13 @@ namespace MicroMLVisualizer.Controllers
 
             try
             {
+                if (string.IsNullOrWhiteSpace(code))
+                {
+                    viewModel.ErrorMessage = "Please enter some MicroML code.";
+                    viewModel.Success = false;
+                    return View("Index", viewModel);
+                }
+
                 // Parse the code
                 var lexer = new Lexer(code);
                 var tokens = lexer.Tokenize();
@@ -40,9 +54,21 @@ namespace MicroMLVisualizer.Controllers
             {
                 viewModel.ErrorMessage = ex.Message;
                 viewModel.Success = false;
+                _logger.LogError(ex, "Error parsing MicroML code");
             }
 
             return View("Index", viewModel);
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }
