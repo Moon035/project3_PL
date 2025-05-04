@@ -40,6 +40,14 @@ namespace MicroMLVisualizer.Controllers
                     return View("Index", viewModel);
                 }
 
+                // Check if the input is valid MicroML code
+                if (!IsValidMicroMLSyntax(code))
+                {
+                    viewModel.ErrorMessage = "The input doesn't appear to be valid MicroML code. Please check the syntax.";
+                    viewModel.Success = false;
+                    return View("Index", viewModel);
+                }
+
                 // Parse the code
                 var lexer = new Lexer(code);
                 var tokens = lexer.Tokenize();
@@ -58,6 +66,29 @@ namespace MicroMLVisualizer.Controllers
             }
 
             return View("Index", viewModel);
+        }
+
+        private bool IsValidMicroMLSyntax(string code)
+        {
+            // Basic check for MicroML keywords and structure
+            var microMLKeywords = new[] { "fun", "let", "if", "then", "else", "in", "->" };
+            
+            // If the code contains typical MicroML keywords, it's likely valid
+            foreach (var keyword in microMLKeywords)
+            {
+                if (code.Contains(keyword))
+                    return true;
+            }
+
+            // If it's just a simple expression, it might also be valid
+            if (System.Text.RegularExpressions.Regex.IsMatch(code, @"^\s*\d+\s*$") || // Just a number
+                System.Text.RegularExpressions.Regex.IsMatch(code, @"^\s*[a-zA-Z_]\w*\s*$") || // Just an identifier
+                System.Text.RegularExpressions.Regex.IsMatch(code, @"^\s*\d+\s*[+\-*/]\s*\d+\s*$")) // Simple arithmetic
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public IActionResult Privacy()

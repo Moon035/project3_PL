@@ -24,6 +24,14 @@ namespace MicroMLVisualizer.Models.Parser
                 _currentToken = _tokens[_position];
         }
 
+        private Token Peek(int offset = 1)
+        {
+            int peekPos = _position + offset;
+            if (peekPos < _tokens.Count)
+                return _tokens[peekPos];
+            return new Token(TokenType.EOF, "", -1);
+        }
+
         private void Eat(TokenType tokenType)
         {
             if (_currentToken.Type == tokenType)
@@ -34,12 +42,20 @@ namespace MicroMLVisualizer.Models.Parser
 
         public Expression Parse()
         {
-            Expression result = ParseExpression();
-            
-            if (_currentToken.Type != TokenType.EOF)
-                throw new Exception($"Unexpected token: {_currentToken.Type} at position {_currentToken.Position}");
-            
-            return result;
+            try
+            {
+                Expression result = ParseExpression();
+                
+                if (_currentToken.Type != TokenType.EOF)
+                    throw new Exception($"Unexpected token: {_currentToken.Type} at position {_currentToken.Position}");
+                
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // If parsing fails completely, try to provide a more helpful error message
+                throw new Exception($"Parse error: {ex.Message}");
+            }
         }
 
         private Expression ParseExpression()
@@ -164,28 +180,42 @@ namespace MicroMLVisualizer.Models.Parser
 
         private Expression ParseApplicationExpression()
         {
-            Expression function = ParsePrimaryExpression();
+            Expression expr = ParsePrimaryExpression();
             
-            while (_currentToken.Type != TokenType.EOF && 
-                   _currentToken.Type != TokenType.RPAREN && 
-                   _currentToken.Type != TokenType.RBRACKET &&
-                   _currentToken.Type != TokenType.RBRACE &&
-                   _currentToken.Type != TokenType.THEN && 
-                   _currentToken.Type != TokenType.ELSE && 
-                   _currentToken.Type != TokenType.IN &&
-                   _currentToken.Type != TokenType.PLUS && 
-                   _currentToken.Type != TokenType.MINUS && 
-                   _currentToken.Type != TokenType.TIMES && 
-                   _currentToken.Type != TokenType.DIVIDE && 
-                   _currentToken.Type != TokenType.EQUALS && 
-                   _currentToken.Type != TokenType.LESS && 
-                   _currentToken.Type != TokenType.GREATER)
+            // Parse function application
+            while (IsApplicationPossible())
             {
                 Expression argument = ParsePrimaryExpression();
-                function = new Application(function, argument);
+                expr = new Application(expr, argument);
             }
             
-            return function;
+            return expr;
+        }
+
+        private bool IsApplicationPossible()
+        {
+            // Check if the next token could be the start of a primary expression
+            switch (_currentToken.Type)
+            {
+                case TokenType.IDENTIFIER:
+                case TokenType.INTEGER:
+                case TokenType.BOOLEAN:
+                case TokenType.LPAREN:
+                case TokenType.LBRACKET:
+                case TokenType.LBRACE:
+                    // Make sure it's not followed by an operator that would bind tighter
+                    Token next = Peek();
+                    return next.Type != TokenType.ARROW && 
+                           next.Type != TokenType.EQUALS &&
+                           next.Type != TokenType.PLUS &&
+                           next.Type != TokenType.MINUS &&
+                           next.Type != TokenType.TIMES &&
+                           next.Type != TokenType.DIVIDE &&
+                           next.Type != TokenType.LESS &&
+                           next.Type != TokenType.GREATER;
+                default:
+                    return false;
+            }
         }
 
         private Expression ParsePrimaryExpression()
