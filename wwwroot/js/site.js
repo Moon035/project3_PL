@@ -6,17 +6,36 @@ function renderAST(ast) {
         return;
     }
     
+    // Clear previous content
     container.innerHTML = '';
+    
+    // Log the AST for debugging
+    console.log('Rendering AST:', ast);
+    
+    // Create tree container
     const tree = document.createElement('div');
-    tree.className = 'ast-tree';
+    tree.className = 'tree';
     
     try {
-        const rootNode = createNodeElement(ast);
-        tree.appendChild(rootNode);
+        const ul = document.createElement('ul');
+        const li = document.createElement('li');
+        
+        // Create node element
+        const nodeElement = createNodeElement(ast);
+        li.appendChild(nodeElement);
+        
+        // Add children if they exist
+        const childrenUl = createChildrenElement(ast);
+        if (childrenUl) {
+            li.appendChild(childrenUl);
+        }
+        
+        ul.appendChild(li);
+        tree.appendChild(ul);
         container.appendChild(tree);
     } catch (error) {
         console.error('Error creating AST visualization:', error);
-        container.innerHTML = '<div class="error-panel">Error rendering AST</div>';
+        container.innerHTML = '<div class="error-panel">Error rendering AST: ' + error.message + '</div>';
     }
 }
 
@@ -26,102 +45,113 @@ function createNodeElement(node) {
         return document.createElement('div');
     }
 
-    const nodeElement = document.createElement('div');
-    nodeElement.className = `ast-node node-${(node.type || '').toLowerCase()}`;
+    const nodeDiv = document.createElement('div');
+    nodeDiv.className = `node node-${(node.type || '').toLowerCase()}`;
     
     // Create the node type header
     const nodeType = document.createElement('div');
-    nodeType.className = 'ast-node-type';
+    nodeType.className = 'node-type';
     nodeType.textContent = node.type;
-    nodeElement.appendChild(nodeType);
+    nodeDiv.appendChild(nodeType);
     
     // Add node properties based on the node type
     switch (node.type) {
         case 'Constant':
-            addProperty(nodeElement, `Type: ${node.nodeType}`);
-            addProperty(nodeElement, `Value: ${node.value}`);
+            addProperty(nodeDiv, `Type: ${node.nodeType}`);
+            addProperty(nodeDiv, `Value: ${node.value}`);
             break;
             
         case 'Variable':
-            addProperty(nodeElement, `Name: ${node.name}`);
+            addProperty(nodeDiv, `Name: ${node.name}`);
             break;
             
         case 'BinaryOp':
-            addProperty(nodeElement, `Operator: ${node.op}`);
-            // Create children container
-            const binaryChildren = document.createElement('div');
-            binaryChildren.className = 'node-children';
-            if (node.left) binaryChildren.appendChild(createNodeElement(node.left));
-            if (node.right) binaryChildren.appendChild(createNodeElement(node.right));
-            nodeElement.appendChild(binaryChildren);
+            addProperty(nodeDiv, `Operator: ${node.op}`);
             break;
             
         case 'Function':
-            addProperty(nodeElement, `Parameter: ${node.parameter}`);
-            const functionChildren = document.createElement('div');
-            functionChildren.className = 'node-children';
-            if (node.body) functionChildren.appendChild(createNodeElement(node.body));
-            nodeElement.appendChild(functionChildren);
-            break;
-            
-        case 'Application':
-            const appChildren = document.createElement('div');
-            appChildren.className = 'node-children';
-            if (node.function) appChildren.appendChild(createNodeElement(node.function));
-            if (node.argument) appChildren.appendChild(createNodeElement(node.argument));
-            nodeElement.appendChild(appChildren);
-            break;
-            
-        case 'IfThenElse':
-            const ifChildren = document.createElement('div');
-            ifChildren.className = 'node-children';
-            
-            // Create labeled children for if-then-else
-            if (node.condition) {
-                const conditionWrapper = createLabeledChild('condition', node.condition);
-                ifChildren.appendChild(conditionWrapper);
-            }
-            if (node.thenBranch) {
-                const thenWrapper = createLabeledChild('then', node.thenBranch);
-                ifChildren.appendChild(thenWrapper);
-            }
-            if (node.elseBranch) {
-                const elseWrapper = createLabeledChild('else', node.elseBranch);
-                ifChildren.appendChild(elseWrapper);
-            }
-            
-            nodeElement.appendChild(ifChildren);
+            addProperty(nodeDiv, `Parameter: ${node.parameter}`);
             break;
             
         case 'LetBinding':
-            addProperty(nodeElement, `Variable: ${node.variable}`);
-            const letChildren = document.createElement('div');
-            letChildren.className = 'node-children';
-            if (node.definition) letChildren.appendChild(createNodeElement(node.definition));
-            if (node.body) letChildren.appendChild(createNodeElement(node.body));
-            nodeElement.appendChild(letChildren);
+            addProperty(nodeDiv, `Variable: ${node.variable}`);
+            break;
+            
+        case 'Application':
+            // Application nodes typically don't need properties
+            break;
+            
+        case 'IfThenElse':
+            // If-then-else nodes typically don't need properties
             break;
     }
     
-    return nodeElement;
+    return nodeDiv;
 }
 
-function createLabeledChild(label, childNode) {
-    const wrapper = document.createElement('div');
-    wrapper.style.textAlign = 'center';
+function createChildrenElement(node) {
+    const children = getChildNodes(node);
     
-    const labelElement = document.createElement('div');
-    labelElement.style.fontSize = '12px';
-    labelElement.style.color = '#666';
-    labelElement.style.marginBottom = '5px';
-    labelElement.textContent = label;
-    
-    wrapper.appendChild(labelElement);
-    if (childNode) {
-        wrapper.appendChild(createNodeElement(childNode));
+    if (children.length === 0) {
+        return null;
     }
     
-    return wrapper;
+    const ul = document.createElement('ul');
+    
+    children.forEach(child => {
+        const li = document.createElement('li');
+        
+        // Create child node
+        const childNode = createNodeElement(child.node);
+        li.appendChild(childNode);
+        
+        // Recursively add children
+        const childrenUl = createChildrenElement(child.node);
+        if (childrenUl) {
+            li.appendChild(childrenUl);
+        }
+        
+        ul.appendChild(li);
+    });
+    
+    return ul;
+}
+
+function getChildNodes(node) {
+    const children = [];
+    
+    console.log('Getting children for node:', node.type);
+    
+    switch (node.type) {
+        case 'BinaryOp':
+            if (node.left) children.push({ label: 'Left', node: node.left });
+            if (node.right) children.push({ label: 'Right', node: node.right });
+            break;
+            
+        case 'Function':
+            if (node.body) children.push({ label: 'Body', node: node.body });
+            break;
+            
+        case 'Application':
+            if (node.function) children.push({ label: 'Function', node: node.function });
+            if (node.argument) children.push({ label: 'Argument', node: node.argument });
+            break;
+            
+        case 'IfThenElse':
+            if (node.condition) children.push({ label: 'Condition', node: node.condition });
+            if (node.thenBranch) children.push({ label: 'Then', node: node.thenBranch });
+            if (node.elseBranch) children.push({ label: 'Else', node: node.elseBranch });
+            break;
+            
+        case 'LetBinding':
+            if (node.definition) children.push({ label: 'Definition', node: node.definition });
+            if (node.body) children.push({ label: 'Body', node: node.body });
+            break;
+    }
+    
+    console.log('Children for', node.type, ':', children);
+    
+    return children;
 }
 
 function addProperty(parentElement, text) {
@@ -130,3 +160,20 @@ function addProperty(parentElement, text) {
     prop.textContent = text;
     parentElement.appendChild(prop);
 }
+
+// Document ready handler
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded');
+    
+    // Set up example buttons
+    const exampleButtons = document.querySelectorAll('.btn-example');
+    exampleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const code = this.getAttribute('data-example');
+            const codeInput = document.getElementById('codeInput');
+            if (codeInput) {
+                codeInput.value = code;
+            }
+        });
+    });
+});

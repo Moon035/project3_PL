@@ -4,7 +4,8 @@ namespace MicroMLVisualizer.Models.Parser
     {
         INTEGER, BOOLEAN, IDENTIFIER, LPAREN, RPAREN,
         PLUS, MINUS, TIMES, DIVIDE, EQUALS, LESS, GREATER,
-        IF, THEN, ELSE, FUN, ARROW, LET, IN, EOF
+        IF, THEN, ELSE, FUN, ARROW, LET, IN, EOF,
+        LBRACKET, RBRACKET, LBRACE, RBRACE  // 새로 추가
     }
 
     public class Token

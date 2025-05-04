@@ -6,11 +6,13 @@
   --text-color: #333;
   --border-color: #ddd;
   --node-bg: #fff;
-  --function-color: #9b59b6;
-  --constant-color: #27ae60;
-  --variable-color: #f39c12;
-  --operation-color: #e67e22;
-  --conditional-color: #16a085;
+  --function-color: #4caf50;
+  --constant-color: #9c27b0;
+  --variable-color: #2196f3;
+  --operation-color: #ff9800;
+  --conditional-color: #e91e63;
+  --application-color: #4caf50;
+  --letbinding-color: #009688;
 }
 
 * {
@@ -40,6 +42,16 @@ header {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+header p {
+  margin: 5px 0 0;
+  opacity: 0.8;
+}
+
 .app-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -52,6 +64,10 @@ header {
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.form-group {
+  margin-bottom: 20px;
 }
 
 .code-input {
@@ -80,6 +96,19 @@ header {
   background-color: #2980b9;
 }
 
+.examples {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.example-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .btn-example {
   background-color: #ecf0f1;
   border: 1px solid var(--border-color);
@@ -88,6 +117,10 @@ header {
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.2s;
+}
+
+.btn-example:hover {
+  background-color: #e0e6e8;
 }
 
 .error-panel {
@@ -105,51 +138,182 @@ header {
   padding: 20px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
+  background-color: #ffffff;
 }
 
-.ast-node {
+/* AST Tree Styling */
+.tree {
+  text-align: center;
+  padding: 20px;
+}
+
+.tree ul {
+  padding-top: 20px;
   position: relative;
-  background-color: var(--node-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 10px;
-  margin: 10px 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s;
+  transition: all 0.5s;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  margin: 0;
+  padding-left: 0;
+  display: flex;
+  justify-content: center;
 }
 
-.ast-node-type {
+.tree li {
+  text-align: center;
+  list-style-type: none;
+  position: relative;
+  padding: 20px 5px 0 5px;
+  transition: all 0.5s;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  float: none;
+  display: inline-block;
+  vertical-align: top;
+}
+
+/*We will use ::before and ::after to draw the connectors*/
+.tree li::before, .tree li::after{
+  content: '';
+  position: absolute; 
+  top: 0; 
+  right: 50%;
+  border-top: 1px solid #ccc;
+  width: 50%; 
+  height: 20px;
+}
+
+.tree li::after{
+  right: auto; 
+  left: 50%;
+  border-left: 1px solid #ccc;
+}
+
+/*We need to remove left-right connectors from elements without any siblings*/
+.tree li:only-child::after, .tree li:only-child::before {
+  display: none;
+}
+
+/*Remove space from the top of single children*/
+.tree li:only-child{ 
+  padding-top: 0;
+}
+
+/*Remove left connector from first child and right connector from last child*/
+.tree li:first-child::before, .tree li:last-child::after{
+  border: 0 none;
+}
+
+/*Adding back the vertical connector to the last nodes*/
+.tree li:last-child::before{
+  border-right: 1px solid #ccc;
+  border-radius: 0 5px 0 0;
+  -webkit-border-radius: 0 5px 0 0;
+  -moz-border-radius: 0 5px 0 0;
+}
+
+.tree li:first-child::after{
+  border-radius: 5px 0 0 0;
+  -webkit-border-radius: 5px 0 0 0;
+  -moz-border-radius: 5px 0 0 0;
+}
+
+/*Time to add downward connectors from parents*/
+.tree ul ul::before{
+  content: '';
+  position: absolute; 
+  top: 0; 
+  left: 50%;
+  border-left: 1px solid #ccc;
+  width: 0; 
+  height: 20px;
+}
+
+.tree li .node {
+  border: 1px solid #999;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+  display: inline-block;
+  border-radius: 5px;
+  transition: all 0.5s;
+  min-width: 120px;
+  background: #fff;
+  position: relative;
+  margin: 0 10px;
+}
+
+.tree li .node:hover {
+  background: #f5f5f5;
+  border: 1px solid #666;
+}
+
+.node-type {
   font-weight: bold;
   margin-bottom: 5px;
 }
 
+.node-property {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Color coding for different node types */
 .node-function {
-  border-left: 4px solid var(--function-color);
-}
-
-.node-constant {
-  border-left: 4px solid var(--constant-color);
-}
-
-.node-variable {
-  border-left: 4px solid var(--variable-color);
+  background-color: #e8f5e9 !important;
+  border-color: #4caf50 !important;
 }
 
 .node-binaryop {
-  border-left: 4px solid var(--operation-color);
+  background-color: #fff3e0 !important;
+  border-color: #ff9800 !important;
+}
+
+.node-variable {
+  background-color: #e3f2fd !important;
+  border-color: #2196f3 !important;
+}
+
+.node-constant {
+  background-color: #f3e5f5 !important;
+  border-color: #9c27b0 !important;
 }
 
 .node-ifthenelse {
-  border-left: 4px solid var(--conditional-color);
+  background-color: #fce4ec !important;
+  border-color: #e91e63 !important;
 }
 
-.node-children {
-  margin-left: 30px;
-  position: relative;
+.node-letbinding {
+  background-color: #e0f2f1 !important;
+  border-color: #009688 !important;
 }
 
-.node-property {
-  margin: 5px 0;
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 14px;
+.node-application {
+  background-color: #f0f4c3 !important;
+  border-color: #cddc39 !important;
+}
+
+footer {
+  margin-top: 20px;
+  padding: 20px 0;
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+  color: #7f8c8d;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .app-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .tree {
+    overflow-x: auto;
+  }
+  
+  .tree ul {
+    min-width: 800px;
+  }
 }

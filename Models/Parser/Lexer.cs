@@ -110,6 +110,18 @@ namespace MicroMLVisualizer.Models.Parser
                     case ')':
                         Advance();
                         return new Token(TokenType.RPAREN, ")", currentPos);
+                    case '[':
+                        Advance();
+                        return new Token(TokenType.LBRACKET, "[", currentPos);
+                    case ']':
+                        Advance();
+                        return new Token(TokenType.RBRACKET, "]", currentPos);
+                    case '{':
+                        Advance();
+                        return new Token(TokenType.LBRACE, "{", currentPos);
+                    case '}':
+                        Advance();
+                        return new Token(TokenType.RBRACE, "}", currentPos);
                     case '+':
                         Advance();
                         return new Token(TokenType.PLUS, "+", currentPos);

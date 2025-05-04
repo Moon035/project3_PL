@@ -49,7 +49,7 @@
                 $('#codeInput').val($(this).data('example'));
             });
 
-            // Check if we have parse result
+            // Check if we have parse result and render it
             @if (!string.IsNullOrEmpty(Model.ParseResult))
             {
                 <text>
@@ -57,14 +57,12 @@
                         const parseResult = @Html.Raw(Model.ParseResult);
                         console.log('Parse result:', parseResult);
                         
-                        // Make sure renderAST is available
-                        if (typeof renderAST === 'function') {
-                            renderAST(parseResult);
-                        } else {
-                            console.error('renderAST function is not available');
-                        }
+                        // Render the AST
+                        renderAST(parseResult);
                     } catch (e) {
                         console.error('Error rendering AST:', e);
+                        document.getElementById('ast-container').innerHTML = 
+                            '<div class="error-panel">Error rendering AST: ' + e.message + '</div>';
                     }
                 </text>
             }

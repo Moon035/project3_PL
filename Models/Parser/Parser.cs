@@ -168,6 +168,8 @@ namespace MicroMLVisualizer.Models.Parser
             
             while (_currentToken.Type != TokenType.EOF && 
                    _currentToken.Type != TokenType.RPAREN && 
+                   _currentToken.Type != TokenType.RBRACKET &&
+                   _currentToken.Type != TokenType.RBRACE &&
                    _currentToken.Type != TokenType.THEN && 
                    _currentToken.Type != TokenType.ELSE && 
                    _currentToken.Type != TokenType.IN &&
@@ -209,6 +211,18 @@ namespace MicroMLVisualizer.Models.Parser
                     Expression result = ParseExpression();
                     Eat(TokenType.RPAREN);
                     return result;
+                    
+                case TokenType.LBRACKET:
+                    Eat(TokenType.LBRACKET);
+                    Expression bracketResult = ParseExpression();
+                    Eat(TokenType.RBRACKET);
+                    return bracketResult;
+                    
+                case TokenType.LBRACE:
+                    Eat(TokenType.LBRACE);
+                    Expression braceResult = ParseExpression();
+                    Eat(TokenType.RBRACE);
+                    return braceResult;
                 
                 default:
                     throw new Exception($"Unexpected token: {token.Type} at position {token.Position}");
